@@ -1,7 +1,9 @@
 <template>
   <div>
-    <index v-if="!user" />
-    <aplication v-else  />
+    <aplication v-if="user"  />
+    <index v-else />
+    <Loading v-if="validatingToken" />
+   
   </div>
 </template>
 
@@ -12,12 +14,15 @@ import Index from "./Index.vue";
 import Aplication from "./Aplication.vue";
 import { mapState } from "vuex"
 
+import Loading from './Loading.vue'
+
 export default {
   name: "App",
   computed: mapState(['isMenuVisible', 'user']),
   components: {
     Index,
     Aplication,
+    Loading
   },
   data: function () {
     return {
