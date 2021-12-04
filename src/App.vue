@@ -8,7 +8,7 @@
 <script>
 import { baseApiUrl, userKey } from "@/global";
 import axios from "axios";
-import Index from "./Index2.vue";
+import Index from "./Index.vue";
 import Aplication from "./Aplication.vue";
 import { mapState } from "vuex"
 
