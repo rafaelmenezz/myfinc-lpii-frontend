@@ -1,7 +1,7 @@
 import Vue from 'vue'
 
 export const userKey = '__myfinc_user'
-export const baseApiUrl = 'https://myfinc-backend.herokuapp.com/'
+export const baseApiUrl = 'https://myfinc-backend.herokuapp.com'
 
 export function showError(e) {
     if (e && e.response && e.response.data) {
