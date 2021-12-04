@@ -1,8 +1,9 @@
 <template>
   <div>
     <aplication v-if="user"  />
-    <index v-else />
     <Loading v-if="validatingToken" />
+    <index  />
+    
    
   </div>
 </template>
