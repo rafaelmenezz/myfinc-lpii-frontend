@@ -1,67 +1,61 @@
 <template>
-  <div class="graphBox">
-    <div class="box">
-      <canvas id="receitas"></canvas>
-    </div>
-  </div>
+  <div class="box" id="box" ref="box"></div>
 </template>
 <script>
 import Chart from "chart.js/auto";
 
 export default {
   name: "GraphReceitas",
+  props: {
+    familia: Object,
+    data: Object,
+    chartdata: Object,
+    options: Object,
+  },
   data() {
     return {
       myChart: "",
+      myData: {},
     };
   },
   mounted() {
     this.criarGrafico();
   },
+
   methods: {
-    criarGrafico: function () {
-      let ctx = document.getElementById("receitas").getContext("2d");
-      const myChart = new Chart(ctx, {
+    criarGrafico: async function () {
+      let box = document.getElementById("box");
+      box.innerHTML = "&nbsp;";
+      box.innerHTML = "<canvas id='receitas' ref='canvas'></canvas>";
+
+      const ctx = document.getElementById("receitas").getContext("2d");
+      this.myChart = new Chart(ctx, {
         type: "doughnut",
-        data: {
-          labels: ["Red", "Blue", "Yellow"],
-          datasets: [
-            {
-              label: "My First Dataset",
-              data: [300, 50, 100],
-              backgroundColor: [
-                "rgb(255, 99, 132)",
-                "rgb(54, 162, 235)",
-                "rgb(255, 205, 86)",
-              ],
-              hoverOffset: 4,
-            },
-          ],
-        },
-        options: {
-          onClick: (e) => {
-            const points = myChart.getElementsAtEventForMode(
-              e,
-              "nearest",
-              { intersect: true },
-              true
-            );
-
-            if (points.length) {
-              const firstPoint = points[0];
-              const label = myChart.data.labels[firstPoint.index];
-              const value =
-                myChart.data.datasets[firstPoint.datasetIndex].data[
-                  firstPoint.index
-                ];
-              const financa =
-                myChart.data.datasets[firstPoint.datasetIndex].label;
-
-              alert(label + " - " + value + " - " + financa);
-            }
-          },
-        },
+        data: this.chartdata,
+        options: this.options,
       });
+    },
+  },
+  update() {
+    this.$nextTick(async function () {
+      await this.criarGrafico();
+    });
+  },
+
+  watch: {
+    async familia(val, oldVal) {
+      if (val != oldVal) {
+        //await this.$refs.canvas.update();
+        alert("aqui");
+        await this.criarGrafico();
+      }
+    },
+    // eslint-disable-next-line no-unused-vars
+    async chartData(newData, oldData) {
+      console.log(this.myChart);
+      console.log("new data from watcher", newData);
+      this.chartData.datasets[0].data = newData;
+      this.myChart.renderChart(this.chartData, this.options);
     },
   },
 };

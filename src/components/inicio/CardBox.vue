@@ -3,7 +3,9 @@
     <div class="cardBox">
       <div class="cards">
         <div>
-          <div class="numbers">1,504</div>
+          <div class="numbers">
+            {{ dados.receitaMes == null ? 0 : dados.receitaMes }}
+          </div>
           <div class="cardName">Receitas</div>
         </div>
         <div class="iconBx">
@@ -12,7 +14,9 @@
       </div>
       <div class="cards">
         <div>
-          <div class="numbers">1,504</div>
+          <div class="numbers">
+            {{ dados.despesaMes == null ? 0 : dados.despesaMes }}
+          </div>
           <div class="cardName">Despesas</div>
         </div>
         <div class="iconBx">
@@ -21,7 +25,12 @@
       </div>
       <div class="cards">
         <div>
-          <div class="numbers">1,504</div>
+          <div class="numbers">
+            {{
+              (dados.receitaMes == null ? 0 : dados.receitaMes) -
+              (dados.despesaMes == null ? 0.0 : dados.receitaMes)
+            }}
+          </div>
           <div class="cardName">Saldo Mês</div>
         </div>
         <div class="iconBx">
@@ -30,7 +39,7 @@
       </div>
       <div class="cards">
         <div>
-          <div class="numbers">1,504</div>
+          <div class="numbers">{{ dados.receitasAno - dados.despesasAno }}</div>
           <div class="cardName">Saldo Ano</div>
         </div>
         <div class="iconBx">
@@ -42,8 +51,26 @@
 </template>
 <script>
 export default {
-  name: "Inicio",
+  name: "CardBox",
+  props: {
+    dados: Object,
+  },
+
   components: {},
+  data() {
+    return {
+      receitas: "",
+      despesas: "",
+      saldomes: "",
+      saldoano: "",
+    };
+  },
+  watch: {
+    dados: function () {
+      this.receitas =
+        this.dados.receitaMes == null ? 0 : parseInt(this.dados.receitaMes);
+    },
+  },
 };
 </script>
 <style scoped>

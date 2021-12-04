@@ -2,58 +2,303 @@
   <div class="details">
     <div class="recentOrders">
       <div class="cardHeader">
-        <h2>Minhas Receitas</h2>
-        <a href="#" class="btn"> Atualizar</a>
+        <h2>Receitas</h2>
+        <a href="#" class="btn" @click="showModalMotante"> Cadastrar</a>
       </div>
       <div class="corpo">
-        <GraphMes />
-        <table class="table">
-          <thead>
-            <tr>
-              <td>Finança</td>
-              <td>Forma de Recebimento</td>
-              <td>valor</td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Sálario</td>
-              <td>Depósito Caixa Economica</td>
-              <td>R$ 8000,00</td>
-            </tr>
-            <tr>
-              <td>Sálario</td>
-              <td>Depósito Caixa Economica</td>
-              <td>R$ 8000,00</td>
-            </tr>
-            <tr>
-              <td>Sálario</td>
-              <td>Depósito Caixa Economica</td>
-              <td>R$ 8000,00</td>
-            </tr>
-            <tr>
-              <td>Sálario</td>
-              <td>Depósito Caixa Economica</td>
-              <td>R$ 8000,00</td>
-            </tr>
-            <tr>
-              <td>Sálario</td>
-              <td>Depósito Caixa Economica</td>
-              <td>R$ 8000,00</td>
-            </tr>
-          </tbody>
-        </table>
+        <div>
+          <graph-receitas
+            :chartdata="data"
+            :options="options"
+            ref="graficoreceitas"
+          />
+        </div>
+        <!-- Grafico  -->
+
+        <!-- Fim Gráfico-->
+        <div class="uk-margin uk-margin-medium-left uk-margin-medium-right">
+          <vk-table
+            class="uk-margin table"
+            :data="montantes"
+            narrowed
+            justified
+          >
+            <vk-table-column
+              title="Descrição"
+              cell="descricao"
+            ></vk-table-column>
+            <vk-table-column
+              title="pagamento"
+              cell="pagamento"
+            ></vk-table-column>
+            <vk-table-column title="valor" cell="valor"></vk-table-column>
+          </vk-table>
+        </div>
       </div>
     </div>
 
-    <!-- New Customer -->
+    <!-- Modals -->
+
+    <vk-modal :show.sync="mdMontante">
+      <vk-modal-close @click="mdMontante = false"></vk-modal-close>
+      <vk-modal-title slot="header"> Nova Receita </vk-modal-title>
+      <form>
+        <div class="uk-margin">
+          <label class="uk-form-label" for="form-stacked-select">Receita</label>
+          <div class="uk-form-controls">
+            <select
+              class="uk-select"
+              id="form-stacked-select"
+              @change="mdCadastro"
+              v-model="montante.codfinanca"
+            >
+              <option value="0">Selecionar</option>
+              <option
+                v-for="itens in receitas"
+                :key="itens.index"
+                :value="itens.cod"
+              >
+                {{ itens.descricao }}
+              </option>
+              <option>Nova Finança</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="uk-margin">
+          <label class="uk-form-label" for="form-stacked-text"
+            >Forma de Recebimento</label
+          >
+          <div class="uk-form-controls">
+            <input
+              class="uk-input"
+              type="text"
+              placeholder=""
+              v-model="montante.pagamento"
+            />
+          </div>
+        </div>
+        <div class="uk-margin">
+          <label class="uk-form-label" for="form-stacked-text">Valor</label>
+          <div class="uk-form-controls">
+            <input
+              class="uk-input"
+              type="text"
+              placeholder=""
+              v-model="montante.valor"
+            />
+          </div>
+        </div>
+      </form>
+
+      <div slot="footer" class="uk-text-right">
+        <vk-button class="uk-margin-small-right" @click="mdMontante = false"
+          >Cancelar</vk-button
+        >
+        <vk-button type="primary" @click.prevent="cadMontante"
+          >Cadastrar</vk-button
+        >
+      </div>
+    </vk-modal>
+
+    <vk-modal :show.sync="mdFinanca">
+      <vk-modal-close @click="showModalMotante = false"></vk-modal-close>
+      <vk-modal-title slot="header">Nova Finança</vk-modal-title>
+      <form>
+        <div class="uk-margin">
+          <label class="uk-form-label" for="form-stacked-text">Descrição</label>
+          <div class="uk-form-controls">
+            <input
+              class="uk-input"
+              type="text"
+              v-model="financa.descricao"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+      </form>
+      <div slot="footer" class="uk-text-right">
+        <vk-button class="uk-margin-small-right" @click="showModalMotante"
+          >Cancelar</vk-button
+        >
+        <vk-button type="primary" @click="cadFinanca">Cadastrar</vk-button>
+      </div>
+    </vk-modal>
   </div>
 </template>
 <script>
-import GraphMes from "./GraphReceitas.vue";
+import { baseApiUrl, showError, userKey } from "@/global";
+import axios from "axios";
+import GraphReceitas from "./GraphReceitas.vue";
+
 export default {
-  name: "userReceitas",
-  components: { GraphMes },
+  name: "UserReceitas",
+  components: { GraphReceitas },
+
+  props: {},
+  data() {
+    return {
+      receitas: [],
+      montantes: [],
+      isCadatroFinanca: false,
+      myFinancas: [],
+
+      financa: {
+        descricao: "",
+        codusuario: 0,
+        parentcod: 2,
+      },
+      montante: {
+        pagamento: "",
+        valor: 0,
+        codfinanca: 0,
+      },
+      myChart: null,
+      mdFinanca: false,
+      mdMontante: false,
+      data: {
+        labels: ["Red", "Blue", "Yellow"],
+        datasets: [
+          {
+            label: "nome",
+            data: [],
+            backgroundColor: [
+              "rgb(255, 99, 132)",
+              "rgb(54, 162, 235)",
+              "rgb(255, 205, 86)",
+              "rgb(255, 29, 40)",
+              "rgb(24, 165, 24)",
+              "rgb(63 72 181)",
+              "rgb(102 43 43)",
+              "rgb(199 104 38)",
+            ],
+            hoverOffset: 4,
+          },
+        ],
+      },
+      options: {
+        parsing: {
+          key: "valor",
+        },
+      },
+    };
+  },
+  async mounted() {
+    const json = localStorage.getItem(userKey);
+    this.user = await JSON.parse(json);
+    await this.loadReceitas();
+    await this.$refs.graficoreceitas.criarGrafico();
+  },
+  methods: {
+    async loadReceitas() {
+      await axios
+        .get(`${baseApiUrl}/financas/usuarios/${this.user.cod}`)
+        .then((resr) => {
+          this.receitas = resr.data.receitas;
+        })
+        .catch(showError);
+      await axios
+        .get(`${baseApiUrl}/relatorio/usuario/${this.user.cod}/mes/`)
+        .then((resm) => {
+          this.montantes = resm.data.receitas;
+          this.data.datasets[0].data = resm.data.receitas;
+        })
+        .catch(showError);
+
+      await this.setLabels();
+    },
+
+    async cadFinanca() {
+      let salvar = this.financa;
+
+      salvar.codusuario = this.user.cod;
+      salvar.parentcod = 2;
+      this.resetFinanca();
+
+      await axios
+        .post(`${baseApiUrl}/financas/`, salvar)
+        .then((res) => {
+          this.$toasted.global.defaultSuccess();
+          salvar.cod = res.data.cod;
+          this.mdFinanca = false;
+          this.mdMontante = false;
+        })
+        .catch(showError);
+
+      this.loadReceitas();
+    },
+    voltaMontante() {
+      this.mdFinanca = false;
+      this.mdMontante = false;
+      this.mdMontante = true;
+
+      return;
+    },
+    async cadMontante() {
+      await axios
+        .post(`${baseApiUrl}/montantes/`, this.montante)
+        .then(() => {
+          this.$toasted.global.defaultSuccess();
+          this.mdMontante = false;
+          this.mdFinanca = false;
+        })
+        .catch(showError);
+
+      await this.loadReceitas();
+      await this.$refs.graficoreceitas.criarGrafico();
+    },
+
+    mdCadastro: async function (evt) {
+      if (evt.target.value == "Nova Finança") {
+        this.showModalMotante();
+        this.showModalFinanca();
+      }
+    },
+    async showModalMotante() {
+      this.resetMontante();
+      this.mdMontante = !this.mdMontante;
+    },
+    resetFinanca() {
+      this.financa = {
+        descricao: "",
+        codusuario: 0,
+        parentcod: 2,
+      };
+    },
+    async setLabels() {
+      let label = [];
+      this.montantes.forEach(function (item, index) {
+        label[index] = item.descricao;
+      });
+      this.data.labels = label;
+    },
+    resetMontante() {
+      this.montante.pagamento = "";
+      this.montante.valor = 0;
+      this.montante.codfinanca = 0;
+    },
+    async showModalFinanca() {
+      this.resetMontante();
+      this.mdFinanca = !this.mdfinanca;
+    },
+  },
+
+  watch: {
+    async usuario(val, oldVal) {
+      if (val != oldVal) {
+        await this.loadReceitas();
+        await this.$refs.graficoreceitas.criarGrafico();
+        // console.log(this.$refs.grafico.$destroy);
+      }
+    },
+
+    data(newData) {
+      console.log(this.myChart);
+      console.log("new data from watcher", newData);
+      this.data.datasets[0].data = newData;
+      this.myChart.renderChart(this.chartData, this.options);
+    },
+  },
 };
 </script>
 <style scoped>
@@ -81,6 +326,7 @@ export default {
   position: relative;
   display: inline-grid;
   grid-template-columns: 1fr 2fr;
+  padding: 20px;
 }
 
 .cardHeader {
@@ -90,7 +336,7 @@ export default {
 }
 
 .cardHeader h2 {
-  font-weight: 600;
+  font-weight: 300;
   color: var(--blue);
 }
 .btn {
@@ -101,6 +347,23 @@ export default {
   color: var(--white);
   border-radius: 6px;
 }
+.graphBox {
+  position: relative;
+  width: 100%;
+  grid-template-columns: 1fr;
+  grid-gap: 30px;
+  min-height: 300px;
+}
+.graphBox .box {
+  position: relative;
+  background: var(--white);
+  padding: 20px;
+  width: 100%;
+  transition: 0.5s;
+}
+canvas {
+  max-height: 300px;
+}
 
 .details .table {
   width: 100%;
@@ -110,7 +373,7 @@ export default {
 }
 
 .details .table thead td {
-  font-weight: 600;
+  font-weight: 100;
 }
 
 .details .recentOrders .table tr {

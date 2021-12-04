@@ -67,13 +67,8 @@
         <div class="cardHeader">
           <h2>Grupo</h2>
           <div class="menu">
-            <vk-icon-button
-              href="#"
-              class="bt convidar"
-              icon="plus-circle"
-              @click.prevent="mdConvite = true"
-              v-show="admin.cod == user.cod"
-            ></vk-icon-button>
+            <a href="#" class="btn" @click="mdConvite = true"  v-show="admin.cod == user.cod"> convidar</a>
+        
           </div>
         </div>
         <div class="corpo">

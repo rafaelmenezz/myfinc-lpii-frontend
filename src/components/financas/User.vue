@@ -40,18 +40,27 @@
               cell="codmontante"
             >
               <vk-icon-link
-                class="uk-margin-small-left"
+                class="uk-margin-small-left btn-editar"
                 icon="file-edit"
                 slot-scope="{ cell }"
+                ratio="1.5"
                 @click.prevent="showModal(cell)"
               ></vk-icon-link>
             </vk-table-column>
-            <vk-table-column title="excluir" width="1-5" linked>
+            <vk-table-column
+              title="excluir"
+              width="1-5"
+              cell="codmontante"
+              linked
+            >
               <vk-icon-link
                 reset
                 href
-                class="uk-margin-small-left"
+                class="uk-margin-small-left btn-excluir"
+                ratio="1.5"
                 icon="trash"
+                slot-scope="{ cell }"
+                @click.prevent="mdExcluir(cell)"
               ></vk-icon-link>
             </vk-table-column>
           </vk-table>
@@ -89,18 +98,27 @@
             >
               <vk-icon-link
                 href="#"
-                class="uk-margin-small-left"
+                class="uk-margin-small-left btn-editar"
                 icon="file-edit"
                 slot-scope="{ cell }"
+                ratio="1.5"
                 @click.prevent="showModal(cell)"
               ></vk-icon-link>
             </vk-table-column>
-            <vk-table-column title="excluir" width="1-5" linked>
+            <vk-table-column
+              title="excluir"
+              width="1-5"
+              cell="codmontante"
+              linked
+            >
               <vk-icon-link
                 reset
                 href
-                class="uk-margin-small-left"
+                slot-scope="{ cell }"
+                class="uk-margin-small-left btn-excluir"
+                ratio="1.5"
                 icon="trash"
+                @click.prevent="mdExcluir(cell)"
               ></vk-icon-link>
             </vk-table-column>
           </vk-table>
@@ -122,6 +140,24 @@
         <vk-button type="primary" @click.prevent="editar">Salvar</vk-button>
       </div>
     </vk-modal>
+
+    <vk-modal center :show.sync="showExcluir">
+      <vk-modal-close @click="showExcluir = false"></vk-modal-close>
+      <h3>
+        <vk-icon
+          class="uk-margin-medium-right btn-excluir"
+          ratio="3"
+          icon="warning"
+        ></vk-icon>
+        Deseja excluir o finança {{ financaExcluir.descricao }} ?
+      </h3>
+      <div slot="footer" class="uk-text-right">
+        <vk-button class="uk-margin-small-right" @click="showExcluir = false"
+          >Cancelar</vk-button
+        >
+        <vk-button type="danger" @click.prevent="excluir">Excluir</vk-button>
+      </div>
+    </vk-modal>
   </div>
 </template>
 <script>
@@ -139,6 +175,8 @@ export default {
     return {
       dia: "",
       financa: {},
+      financaExcluir: {},
+      showExcluir: false,
       modal: false,
       dados: [
         {
@@ -172,7 +210,7 @@ export default {
     async buscar(evt) {
       let dt = evt.target.value;
       await axios
-        .get(`${baseApiUrl}/relatorio/usuario/mes/${this.user.cod}/${dt}`)
+        .get(`${baseApiUrl}/relatorio/usuario/${this.user.cod}/mes/${dt}`)
         .then((res) => {
           this.dados = res.data;
         })
@@ -180,7 +218,7 @@ export default {
     },
     async getFinancas() {
       await axios
-        .get(`${baseApiUrl}/relatorio/usuario/mes/${this.user.cod}`)
+        .get(`${baseApiUrl}/relatorio/usuario/${this.user.cod}/mes/`)
         .then((res) => {
           this.dados = res.data;
         })
@@ -192,6 +230,15 @@ export default {
         .get(`${baseApiUrl}/montantes/${cod}`)
         .then((res) => {
           this.financa = res.data;
+        })
+        .catch(showError);
+    },
+    async getMontantesExcluir(cod) {
+      await axios
+        .get(`${baseApiUrl}/montantes/${cod}`)
+        .then((res) => {
+          this.financaExcluir = res.data;
+          this.showExcluir = true;
         })
         .catch(showError);
     },
@@ -230,6 +277,21 @@ export default {
     async showModal(cod) {
       await this.getMontantes(cod);
       this.modal = true;
+    },
+    async mdExcluir(cod) {
+      await this.getMontantesExcluir(cod);
+    },
+    async excluir() {
+      let cod = this.financaExcluir.codmontante;
+
+      await axios
+        .delete(`${baseApiUrl}/montantes/${cod}`)
+        .then(() => {
+          this.$toasted.global.editSuccess();
+        })
+        .catch(showError);
+      await this.getFinancas();
+      this.showExcluir = false;
     },
   },
   watch: {
@@ -295,8 +357,14 @@ export default {
   position: relative;
   padding: 5px 10px;
   text-decoration: none;
-  color: var(--white);
+  color: var(--blue);
   border-radius: 6px;
+}
+.btn-editar {
+  color: yellow;
+}
+.btn-excluir {
+  color: red;
 }
 .graphBox {
   position: relative;

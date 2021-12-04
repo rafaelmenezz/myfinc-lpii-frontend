@@ -45,18 +45,27 @@
               cell="codmontante"
             >
               <vk-icon-link
-                class="uk-margin-small-left"
+                class="uk-margin-small-left btn-editar"
                 icon="file-edit"
                 slot-scope="{ cell }"
+                ratio="1.5"
                 @click.prevent="showModal(cell)"
               ></vk-icon-link>
             </vk-table-column>
-            <vk-table-column title="excluir" width="1-5" linked>
+            <vk-table-column
+              title="excluir"
+              width="1-5"
+              cell="codmontante"
+              linked
+            >
               <vk-icon-link
                 reset
                 href
-                class="uk-margin-small-left"
+                class="uk-margin-small-left btn-excluir"
+                slot-scope="{ cell }"
+                ratio="1.5"
                 icon="trash"
+                @click.prevent="mdExcluir(cell)"
               ></vk-icon-link>
             </vk-table-column>
           </vk-table>
@@ -65,7 +74,6 @@
           <h2>Nenhuma Receita Cadastrada</h2>
         </div>
 
-        
         <div v-if="dados.despesas != null">
           <h2>Despesas</h2>
           <vk-table
@@ -93,22 +101,31 @@
               width="1-5"
               class="uk-padding"
               linked
-              cell="codfinanca"
+              cell="codmontante"
             >
               <vk-icon-link
                 href="#"
-                class="uk-margin-small-left"
+                class="uk-margin-small-left btn-editar"
                 icon="file-edit"
                 slot-scope="{ cell }"
+                ratio="1.5"
                 @click.prevent="showModal(cell)"
               ></vk-icon-link>
             </vk-table-column>
-            <vk-table-column title="excluir" width="1-5" linked>
+            <vk-table-column
+              title="excluir"
+              width="1-5"
+              cell="codmontante"
+              linked
+            >
               <vk-icon-link
                 reset
                 href
-                class="uk-margin-small-left"
+                class="uk-margin-small-left btn-excluir"
+                slot-scope="{ cell }"
+                ratio="1.5"
                 icon="trash"
+                @click.prevent="mdExcluir(cell)"
               ></vk-icon-link>
             </vk-table-column>
           </vk-table>
@@ -125,9 +142,27 @@
       <form-financa :objfinanca="financa" />
       <div slot="footer" class="uk-text-right">
         <vk-button class="uk-margin-small-right" @click="modal = false"
-          >Cancel</vk-button
+          >Cancelar</vk-button
         >
         <vk-button type="primary" @click.prevent="editar">Salvar</vk-button>
+      </div>
+    </vk-modal>
+
+    <vk-modal center :show.sync="showExcluir">
+      <vk-modal-close @click="showExcluir = false"></vk-modal-close>
+      <h3>
+        <vk-icon
+          class="uk-margin-medium-right btn-excluir"
+          ratio="3"
+          icon="warning"
+        ></vk-icon>
+        Deseja excluir o finança {{ financaExcluir.descricao }} ?
+      </h3>
+      <div slot="footer" class="uk-text-right">
+        <vk-button class="uk-margin-small-right" @click="showExcluir = false"
+          >Cancelar</vk-button
+        >
+        <vk-button type="danger" @click.prevent="excluir">Excluir</vk-button>
       </div>
     </vk-modal>
   </div>
@@ -171,10 +206,12 @@ export default {
         },
       ],
       financa: {},
+      financaExcluir: {},
       despesaSelecionada: [],
       receitaSelecionada: [],
       selecionados: false,
       modal: false,
+      showExcluir: false,
     };
   },
   async mounted() {
@@ -211,12 +248,20 @@ export default {
         })
         .catch(showError);
     },
+    async getMontantesExcluir(cod) {
+      await axios
+        .get(`${baseApiUrl}/montantes/${cod}`)
+        .then((res) => {
+          this.financaExcluir = res.data;
+          this.showExcluir = true;
+        })
+        .catch(showError);
+    },
     async editar() {
       await this.editarMontantes();
       await this.editarFinanca();
       await this.getFinancas();
       this.modal = false;
-  
     },
     async editarMontantes() {
       let cod = this.financa.codmontante;
@@ -234,6 +279,21 @@ export default {
           this.$toasted.global.editSuccess();
         })
         .catch(showError);
+    },
+    async mdExcluir(cod) {
+      await this.getMontantesExcluir(cod);
+    },
+    async excluir() {
+      let cod = this.financaExcluir.codmontante;
+
+      await axios
+        .delete(`${baseApiUrl}/montantes/${cod}`)
+        .then(() => {
+          this.$toasted.global.editSuccess();
+        })
+        .catch(showError);
+      await this.getFinancas();
+      this.showExcluir = false;
     },
     isSelecionados() {
       if (
@@ -320,8 +380,14 @@ export default {
   position: relative;
   padding: 5px 10px;
   text-decoration: none;
-  color: var(--white);
+  color: var(--blue);
   border-radius: 6px;
+}
+.btn-editar {
+  color: yellow;
+}
+.btn-excluir {
+  color: red;
 }
 .graphBox {
   position: relative;

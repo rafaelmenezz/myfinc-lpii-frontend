@@ -1,8 +1,14 @@
 <template>
   <div>
     <user :user="user" :financas="userfinancas" />
-    <familia :user="user" v-for="itens in familias" :familiaCod="itens.cod" :key="itens.cod" :admin="itens.admin" :nome="itens.nome" />
-
+    <familia
+      :user="user"
+      v-for="itens in familias"
+      :familiaCod="itens.cod"
+      :key="itens.cod"
+      :admin="itens.admin"
+      :nome="itens.nome"
+    />
   </div>
 </template>
 <script>
@@ -10,7 +16,7 @@ import { baseApiUrl, userKey, showError } from "@/global";
 import axios from "axios";
 
 import User from "./User.vue";
-import Familia from "./Familia.vue"
+import Familia from "./Familia.vue";
 
 export default {
   name: "Financas",
@@ -41,7 +47,7 @@ export default {
     },
     async loadFinancas() {
       await axios
-        .get(`${baseApiUrl}/relatorio/usuario/mes/${this.user.cod}`)
+        .get(`${baseApiUrl}/relatorio/usuario/${this.user.cod}/mes/`)
         .then((resf) => {
           this.userfinancas = resf.data;
         })

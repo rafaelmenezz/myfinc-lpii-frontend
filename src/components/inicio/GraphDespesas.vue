@@ -1,67 +1,62 @@
 <template>
-  <div class="graphBox">
-    <div class="box">
-      <canvas id="despesas"></canvas>
-    </div>
-  </div>
+  <div class="box" id="boxDespesas" ref="boxDespesas"></div>
 </template>
 <script>
 import Chart from "chart.js/auto";
 
 export default {
   name: "GraphDespesas",
+  props: {
+    familia: Object,
+    dataDespesas: Object,
+    chartdataDespesas: Object,
+    optionsDespesas: Object,
+  },
   data() {
     return {
-      myChart: "",
+      myChartDespesas: "",
+      myDataDespesas: {},
     };
   },
   mounted() {
-    this.criarGrafico();
+    this.criarGraficoDespesas();
   },
   methods: {
-    criarGrafico: function () {
-      let ctx = document.getElementById("despesas").getContext("2d");
-      const myChart = new Chart(ctx, {
+    criarGraficoDespesas: async function () {
+      let box = document.getElementById("boxDespesas");
+      box.innerHTML = "&nbsp;";
+      box.innerHTML = "<canvas id='despesas' ref='canvasDespesas'></canvas>";
+
+      const ctxd = document.getElementById("despesas").getContext("2d");
+      this.myChartDespesas = new Chart(ctxd, {
         type: "doughnut",
-        data: {
-          labels: ["Red", "Blue", "Yellow"],
-          datasets: [
-            {
-              label: "My First Dataset",
-              data: [300, 50, 100],
-              backgroundColor: [
-                "rgb(255, 99, 132)",
-                "rgb(54, 162, 235)",
-                "rgb(255, 205, 86)",
-              ],
-              hoverOffset: 4,
-            },
-          ],
-        },
-        options: {
-          onClick: (e) => {
-            const points = myChart.getElementsAtEventForMode(
-              e,
-              "nearest",
-              { intersect: true },
-              true
-            );
-
-            if (points.length) {
-              const firstPoint = points[0];
-              const label = myChart.data.labels[firstPoint.index];
-              const value =
-                myChart.data.datasets[firstPoint.datasetIndex].data[
-                  firstPoint.index
-                ];
-              const financa =
-                myChart.data.datasets[firstPoint.datasetIndex].label;
-
-              alert(label + " - " + value + " - " + financa);
-            }
-          },
-        },
+        data: this.chartdataDespesas,
+        options: this.optionsDespesas,
       });
+    },
+  },
+  update() {
+    this.$nextTick(async function () {
+      await this.criarGraficoDespesas();
+    });
+  },
+  watch: {
+    async familia(val, oldVal) {
+      if (val != oldVal) {
+        //await this.$refs.canvas.update();
+
+        await this.criarGraficoDespesas();
+      }
+    },
+    // eslint-disable-next-line no-unused-vars
+    async chartData(newData, oldData) {
+      console.log(this.myChartDespesas);
+      console.log("new data from watcher", newData);
+      this.chartdataDespesas.datasets[0].data = newData;
+      this.myChartDespesas.renderChart(
+        this.chartDataDespesas,
+        this.optionsDespesas
+      );
     },
   },
 };
